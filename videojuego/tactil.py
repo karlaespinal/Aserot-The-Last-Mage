@@ -5,7 +5,7 @@ Los botones en pantalla se traducen a las mismas teclas virtuales que usa el tec
 resto del juego no necesita saber si se juega con teclado o con los dedos:
 
     izquierda / derecha  -> K_LEFT / K_RIGHT   (se mantienen; puedes deslizar el dedo de uno a otro)
-    correr               -> K_LSHIFT            (mantener)
+    correr               -> K_LSHIFT            (automático: al mantener una dirección SEG_CORRER segundos)
     saltar               -> K_SPACE             (mantener = salto más alto)
     magia                -> K_j                 (mantener = disparo automático)
     magias especiales    -> K_1, K_2, K_3
@@ -30,6 +30,8 @@ class Boton:
 
 
 class Tactil:
+    SEG_CORRER = 2.0                     # segundos manteniendo una dirección para empezar a correr solo
+
     def __init__(self, ancho, alto, fuente):
         self.ancho, self.alto = ancho, alto
         self.fuente = fuente
@@ -38,11 +40,12 @@ class Tactil:
         self.dedos = {}                  # finger_id -> (x, y) en coordenadas del juego
         self.asig = {}                   # finger_id -> Boton de acción que pulsó ese dedo
         self.iconos = None               # iconos de las magias especiales (los pone Juego)
+        self.t_dir = 0.0                 # tiempo seguido manteniendo la misma dirección
+        self._dir = 0
         a = ancho
         self.botones = [
             Boton('izq', 110, 600, 68, pygame.K_LEFT, 'mover'),
             Boton('der', 285, 600, 68, pygame.K_RIGHT, 'mover'),
-            Boton('correr', 197, 470, 44, pygame.K_LSHIFT, 'mover'),
             Boton('saltar', a - 120, 590, 76, pygame.K_SPACE, 'accion'),
             Boton('magia', a - 290, 622, 62, pygame.K_j, 'accion'),
             Boton('esp1', a - 350, 455, 42, pygame.K_1, 'accion'),
@@ -59,9 +62,26 @@ class Tactil:
     def soltar_todo(self):
         self.dedos.clear()
         self.asig.clear()
+        self.t_dir = 0.0
+        self._dir = 0
+
+    def actualizar(self, dt):
+        """Llamar una vez por cuadro mientras se juega: cuenta cuánto llevas pulsando la misma dirección."""
+        d = (1 if self.mantiene(pygame.K_RIGHT) else 0) - (1 if self.mantiene(pygame.K_LEFT) else 0)
+        if d != 0 and d == self._dir:
+            self.t_dir += dt
+        else:
+            self.t_dir = 0.0
+        self._dir = d
+
+    @property
+    def corriendo(self):
+        return self._dir != 0 and self.t_dir >= self.SEG_CORRER
 
     def mantiene(self, tecla):
         """¿Hay un dedo manteniendo esta tecla virtual?"""
+        if tecla == pygame.K_LSHIFT:             # no hay botón de correr: se activa solo tras SEG_CORRER s
+            return self.corriendo
         if not self.dedos:
             return False
         for b in self.botones:
@@ -115,6 +135,23 @@ class Tactil:
             d = self._disco(b.r, activo)
             pantalla.blit(d, (b.cx - b.r - 2, b.cy - b.r - 2))
             self._glifo(pantalla, b, jugador, especiales)
+            if b.nombre in ('izq', 'der') and activo:
+                self._indicador_correr(pantalla, b)
+
+    def _indicador_correr(self, p, b):
+        """Anillo que se llena mientras mantienes la dirección; al completarse, el mago corre."""
+        prog = min(1.0, self.t_dir / self.SEG_CORRER)
+        rect = pygame.Rect(b.cx - b.r - 8, b.cy - b.r - 8, (b.r + 8) * 2, (b.r + 8) * 2)
+        if prog >= 1.0:
+            pygame.draw.circle(p, (255, 190, 80), (b.cx, b.cy), b.r + 8, 5)
+            sgn = 1 if b.nombre == 'der' else -1
+            for k in (-1, 1):                    # « » encima del botón: indica que está corriendo
+                x = b.cx + k * 14
+                pygame.draw.polygon(p, (255, 190, 80), [(x + sgn * 10, b.cy - b.r - 30),
+                                                        (x - sgn * 4, b.cy - b.r - 42),
+                                                        (x - sgn * 4, b.cy - b.r - 18)])
+        elif prog > 0.02:
+            pygame.draw.arc(p, (255, 230, 120), rect, math.pi / 2, math.pi / 2 + prog * 2 * math.pi, 5)
 
     def _glifo(self, p, b, jugador, especiales):
         c = (245, 245, 255)
@@ -126,9 +163,6 @@ class Tactil:
         elif b.nombre == 'saltar':
             pygame.draw.polygon(p, c, [(x, y - 32), (x + 32, y + 10), (x - 32, y + 10)])
             pygame.draw.rect(p, c, (x - 12, y + 8, 24, 22))
-        elif b.nombre == 'correr':
-            for k in (-8, 8):
-                pygame.draw.polygon(p, c, [(x + k - 8, y - 14), (x + k + 8, y), (x + k - 8, y + 14)], 4)
         elif b.nombre == 'magia':
             pts = []
             for i in range(8):

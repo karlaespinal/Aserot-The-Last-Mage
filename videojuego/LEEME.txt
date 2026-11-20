@@ -9,7 +9,9 @@ CONTROLES EN PC
 
 CONTROLES EN MOVIL / TABLET (Android e iOS, navegador)
   Aparecen botones tactiles en cuanto se toca la pantalla (tactil.py):
-    izquierda/derecha (abajo a la izquierda) | correr (encima) | saltar y magia (abajo a la derecha)
+    izquierda/derecha (abajo a la izquierda) | saltar y magia (abajo a la derecha)
+    Correr es automatico: manten una direccion 2 segundos y el mago empieza a correr (un anillo se llena
+    alrededor del boton). Al soltar o cambiar de direccion vuelve a caminar. Ajustable: SEG_CORRER en tactil.py.
     3 magias especiales (arriba de los botones de la derecha) | pausa (arriba a la derecha)
   Se pueden usar varios dedos a la vez. Mantener el boton de magia dispara sin parar.
   Juega en horizontal: si el dispositivo esta en vertical el juego pide girarlo.

@@ -948,6 +948,7 @@ class Escena:
         self.msg_pista = max(0, self.msg_pista - dt)
         j = self.jugador
         tactil = self.juego.tactil
+        tactil.actualizar(dt)                        # móvil: mantener una dirección 2 s activa el correr
         teclas = Teclas(pygame.key.get_pressed(), tactil)
         if not self.completado:
             if tactil.mantiene(pygame.K_j):          # en el móvil, mantener el botón dispara sin parar
