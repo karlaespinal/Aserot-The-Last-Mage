@@ -15,12 +15,14 @@ Si juega bien ahí, está listo para publicar.
 Crea `videojuego/build/web/` (index.html + videojuego.apk + favicon). **Esa carpeta es lo que se publica.**
 Cada vez que cambies el código o los assets, vuelve a ejecutar este comando.
 
-### 2b. Preparar para móviles y pantalla completa (OBLIGATORIO tras cada build)
+### 2b. Preparar para pantalla completa y móviles (OBLIGATORIO tras cada build)
     python videojuego/preparar_web.py
 
-Parchea `build/web/index.html`: pone el título "Aserot: The Last Mage", escala el juego (16:9) para ocupar la
-pantalla de cualquier móvil/tablet/PC sin deformarlo, y al primer toque pide pantalla completa y orientación
-horizontal. Se puede ejecutar varias veces sin problema. Hay que repetirlo cada vez que vuelvas a hacer `pygbag --build`.
+Parchea `build/web/index.html`: pone el título "Aserot: The Last Mage" y hace que el juego ocupe TODA la pantalla
+(PC, Android, iOS) sin barras ni deformación: la página mide la proporción de la pantalla y el juego ajusta su ancho
+(el alto se mantiene) para llenarla; se reajusta solo al girar el móvil o cambiar el tamaño de la ventana.
+Respeta el notch de los móviles. Al primer toque en móvil/tablet pide pantalla completa y orientación horizontal.
+Se puede ejecutar varias veces sin problema. Hay que repetirlo cada vez que vuelvas a hacer `pygbag --build`.
 
 ## 3. Subir a GitHub
 Dentro de `videojuego/`:
@@ -43,6 +45,8 @@ IMPORTANTE: `build/web/` debe quedar en el repositorio (el `.gitignore` solo exc
 ## Notas
 - Importante: tras estos cambios hay que volver a ejecutar `pygbag --build videojuego`; la carpeta `build/web` que hay ahora es de la versión anterior.
 - El título de la pestaña lo pone `preparar_web.py` ("Aserot: The Last Mage").
+- En PC, F11 pone el navegador en pantalla completa (el juego se adapta solo).
+- Límites de proporción: de 16:9 a 2.5:1 (móviles alargados incluidos). En una ventana más cuadrada o en vertical se ven franjas negras para no deformar el juego.
 - Controles en PC: A/D, ESPACIO, SHIFT, J, 1/2/3, P. Haz clic en el juego para darle foco al teclado.
 - Móvil / tablet (Android e iOS): abre la URL en el navegador y juega en horizontal. Los botones táctiles aparecen al tocar la pantalla; correr es automático (mantén una dirección 2 s). Si el dispositivo está en vertical, el juego pide girarlo.
 - Pantalla completa: en Android (Chrome) se activa sola al primer toque. iPhone/iOS no permite pantalla completa desde la web: en Safari pulsa Compartir -> "Añadir a pantalla de inicio" y abre el juego desde ese icono (se ve sin barras). En iPad suele funcionar el primer toque.

@@ -42,7 +42,11 @@ class Tactil:
         self.iconos = None               # iconos de las magias especiales (los pone Juego)
         self.t_dir = 0.0                 # tiempo seguido manteniendo la misma dirección
         self._dir = 0
-        a = ancho
+        self._construir()
+        self._cache = {}
+
+    def _construir(self):
+        a = self.ancho
         self.botones = [
             Boton('izq', 110, 600, 68, pygame.K_LEFT, 'mover'),
             Boton('der', 285, 600, 68, pygame.K_RIGHT, 'mover'),
@@ -53,7 +57,12 @@ class Tactil:
             Boton('esp3', a - 150, 440, 42, pygame.K_3, 'accion'),
             Boton('pausa', a - 54, 130, 28, pygame.K_p, 'accion'),
         ]
-        self._cache = {}
+
+    def redimensionar(self, ancho, alto):
+        """La pantalla cambió de proporción: recoloca los botones (los dedos apoyados se sueltan)."""
+        self.ancho, self.alto = ancho, alto
+        self._construir()
+        self.soltar_todo()
 
     # ------------------------------------------------------------------
     def _pos(self, e):

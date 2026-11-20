@@ -37,7 +37,9 @@ TITULO = "Aserot: The Last Mage"
 # ----------------------------------------------------------------------
 # Configuración
 # ----------------------------------------------------------------------
-ANCHO, ALTO = 1280, 720
+ANCHO, ALTO = 1280, 720   # ALTO es fijo; en el navegador ANCHO se adapta a la proporción de la pantalla
+ANCHO_BASE = 1280         # ancho "de diseño": las distancias de juego (p. ej. alcance de rayos) no cambian
+ASPECTO_MIN, ASPECTO_MAX = 16 / 9, 2.5     # mismos límites que en preparar_web.py
 FPS = 60
 WEB = sys.platform == "emscripten"      # True cuando corre en el navegador (Pygbag)
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -1118,7 +1120,7 @@ class Escena:
             self.efectos.append(FxNova(fx, j.cx, j.y + 52))
         else:                                          # Tormenta de Rayos: 5 rayos del cielo
             vivos = [e for e in self.enemigos
-                     if e.estado != 'muerto' and abs(e.cx - j.cx) < ANCHO * 0.6]
+                     if e.estado != 'muerto' and abs(e.cx - j.cx) < ANCHO_BASE * 0.6]
             vivos.sort(key=lambda e: abs(e.cx - j.cx))
             objetivos = [(e.cx, e.pies) for e in vivos[:5]]
             k = 0
@@ -1312,7 +1314,9 @@ class Juego:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption(TITULO)
+        global ANCHO
         if WEB:
+            ANCHO = self._ancho_pantalla() or ANCHO                    # usa toda la pantalla del dispositivo
             self.pantalla = pygame.display.set_mode((ANCHO, ALTO))     # el navegador escala el lienzo
         else:
             try:
@@ -1365,8 +1369,39 @@ class Juego:
         self.nuevo_desbloqueo = False                  # el último nivel completado abrió otro
         self._retrato_ok = False
         self._t_retrato = 0.0
+        self._t_aspecto = 0.0
+        self._layout()
 
-        # zonas pulsables de los menús (dedo o ratón)
+    # --- adaptación al tamaño de pantalla (navegador) -----------------------------------------
+    @staticmethod
+    def _ancho_pantalla():
+        """Ancho lógico que corresponde a la proporción de la pantalla (lo calcula la página, ver
+        preparar_web.py). Devuelve None si no se puede saber (escritorio)."""
+        if not WEB:
+            return None
+        try:
+            from platform import window
+            asp = float(window.ASEROT_ASPECTO)
+            asp = max(ASPECTO_MIN, min(ASPECTO_MAX, asp))
+            return int(round(ALTO * asp / 2.0)) * 2
+        except Exception:
+            return None
+
+    def _revisar_pantalla(self):
+        nuevo = self._ancho_pantalla()
+        if nuevo and abs(nuevo - ANCHO) >= 6:
+            self.redimensionar(nuevo)
+
+    def redimensionar(self, nuevo):
+        """Cambia el ancho lógico (p. ej. al girar el móvil o cambiar el tamaño de la ventana)."""
+        global ANCHO
+        ANCHO = nuevo
+        self.pantalla = pygame.display.set_mode((ANCHO, ALTO))
+        self.tactil.redimensionar(ANCHO, ALTO)
+        self._layout()
+
+    def _layout(self):
+        """Zonas pulsables de los menús (dedo o ratón); dependen del ancho de pantalla."""
         cx = ANCHO // 2
         self.r_izq = pygame.Rect(cx - 435, 410, 90, 90)
         self.r_der = pygame.Rect(cx + 345, 410, 90, 90)
@@ -1393,9 +1428,10 @@ class Juego:
         """Devuelve el fondo i (0-7) como tira espejada de 2x ancho (scroll continuo). Conserva solo el último."""
         if self._fondo_i != i:
             img = pygame.image.load(os.path.join(RUTA_FONDOS, f"fondo_{i + 1}.png")).convert()
-            tira = pygame.Surface((ANCHO * 2, ALTO))
+            iw = img.get_width()                       # la tira (2 x ancho de imagen) cubre pantallas de hasta 2,5:1
+            tira = pygame.Surface((iw * 2, ALTO))
             tira.blit(img, (0, 0))
-            tira.blit(pygame.transform.flip(img, True, False), (ANCHO, 0))
+            tira.blit(pygame.transform.flip(img, True, False), (iw, 0))
             self._fondo_tira, self._fondo_i = tira, i
         return self._fondo_tira
 
@@ -1583,6 +1619,11 @@ class Juego:
     def update(self, dt):
         self.t_menu += dt
         self.t_estado += dt
+        if WEB:
+            self._t_aspecto += dt
+            if self._t_aspecto > 0.35:
+                self._t_aspecto = 0.0
+                self._revisar_pantalla()
         self.t_aviso = max(0.0, self.t_aviso - dt)
         if self.estado == 'jugando':
             self.escena.update(dt)
