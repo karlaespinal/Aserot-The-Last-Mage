@@ -1,0 +1,40 @@
+ASEROT: THE LAST MAGE (pygame)
+
+PyCharm: abre esta carpeta como proyecto -> pip install pygame (o requirements.txt) -> ejecuta main.py
+
+CONTROLES EN PC
+  A/D o flechas mover | SHIFT correr | ESPACIO/W/ARRIBA saltar (mantener = mas alto)
+  J/Z/X lanzar magia | P/ESC pausa | ENTER confirmar | 1 / 2 / 3 magias especiales
+  En los menus tambien se puede hacer clic (flechas, puntos de nivel y boton JUGAR).
+
+CONTROLES EN MOVIL / TABLET (Android e iOS, navegador)
+  Aparecen botones tactiles en cuanto se toca la pantalla (tactil.py):
+    izquierda/derecha (abajo a la izquierda) | correr (encima) | saltar y magia (abajo a la derecha)
+    3 magias especiales (arriba de los botones de la derecha) | pausa (arriba a la derecha)
+  Se pueden usar varios dedos a la vez. Mantener el boton de magia dispara sin parar.
+  Juega en horizontal: si el dispositivo esta en vertical el juego pide girarlo.
+
+NIVELES BLOQUEADOS (progreso.py)
+  Al empezar solo esta abierto el nivel 1. Cada nivel completado abre el siguiente.
+  El progreso se guarda solo: archivo progreso.json junto a main.py (PC) o localStorage (navegador).
+  Para volver a empezar de cero en PC: borra progreso.json.
+
+DIFICULTAD PROGRESIVA (dificultad.py)
+  Cada nivel sube (de menos a mas, 1-5 estrellas en el menu y en el HUD):
+    - enemigos mas rapidos, atacan mas seguido, disparan proyectiles mas veloces y te detectan de mas lejos
+    - desde el nivel 6: proyectiles enemigos quitan 2 corazones y los enemigos aguantan 1 golpe mas
+    - la magia se recupera mas lento (5.0/s en el nivel 1 -> 3.4/s en el nivel 8)
+    - a partir del nivel 2 aparecen enemigos extra (siempre en los mismos sitios)
+  Todos los valores se ajustan en AJUSTES, al principio de dificultad.py.
+  Ver la tabla completa:  python dificultad.py
+
+Magias especiales (barra azul de MAGIA bajo los corazones; los cristales y derrotar enemigos la recargan):
+  1 Ola de Choque      coste 20   enfriamiento 4 s    cupulas de energia que avanzan por el suelo
+  2 Nova Arcana        coste 35   enfriamiento 8 s    explosion alrededor del mago, borra proyectiles
+  3 Tormenta de Rayos  coste 50   enfriamiento 14 s   5 rayos caen del cielo sobre los enemigos
+Valores ajustables en main.py: MANA_MAX, MANA_CRISTAL y la lista ESPECIALES.
+
+Niveles (niveles.py): 1 Valle Brumoso, 2 Colinas Rojizas, 3 Bosque Nocturno, 4 Cascada Mistica,
+5 Pantano Embrujado, 6 Bosque de Telaranas, 7 Cementerio Espectral, 8 Cabana Embrujada (zonas Halloween).
+Enemigos: F mago de fuego, L mago de rayos (disparan) | G, H, I gorgonas (persiguen y atacan con la cola).
+Para comprobar que los niveles se pueden completar:  python niveles.py
